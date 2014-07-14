@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:mx="library://ns.adobe.com/flex/mx" 
+		xmlns:controls="controls.*"
+		implements="components.IValidate"
+ 		width="100%" height="{ HEIGHT }" focusEnabled="true" initialize="onInitialize( )" >
+	<fx:Script>
+		<![CDATA[
+			import components.IValidate;
+			
+			import mx.collections.XMLListCollection;
+			public static const HEIGHT:int = 70;
+			
+			[Bindable]
+			public var accidentNum:int = -1; 
+			
+			public static const BLANK_ACCIDENT:XML = 
+				<RowAccidents 
+					DATE="19010101" 
+					VEHICLETYPE="" 
+					PREVENTABLE="" 
+					NATURE="" 
+					DAMAGE="-1"
+					FATALITIES="-1" 
+					INJURIES="-1"
+				/>;
+			
+
+			// -=- VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			private var validNature:Boolean = false;
+			public function validate( ):Boolean {
+				// clear out everything 
+				vehicleType.errorString = '';
+				preventability.errorString = '';
+				
+				var rval:Boolean = true;
+				// check it
+				if( vehicleType.selectedItem == null ) {
+					vehicleType.errorString = 'You must select a vehicle type';
+					rval = false;
+				}
+				if( preventability.selectedItem == null ) {
+					preventability.errorString = 'This field is required';
+					rval = false;
+				}
+				if( !validNature ) {
+					rval = false;
+					natureOfAccident.setFocus();
+				}
+				
+				return rval;
+			}
+			// -=- / VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			
+					
+			public function toAccidentRowXML( ):XML {
+				var newAccidentRowXML:XML = new XML( BLANK_ACCIDENT );
+				
+				if( date.toFormattedDateString() != '' ) {
+					newAccidentRowXML.@DATE = date.toFormattedDateString( );
+				} else {
+					delete newAccidentRowXML.@DATE;					
+				}
+				
+				if( natureOfAccident.text != '' ) {
+					newAccidentRowXML.@NATURE = natureOfAccident.text;
+				} else {
+					delete newAccidentRowXML.@NATURE;
+				}
+				
+				if( vehicleType.selectedItem as XML ) {
+					newAccidentRowXML.@VEHICLETYPE = (vehicleType.selectedItem as XML).@value;
+				} else {
+					delete newAccidentRowXML.@VEHICLETYPE;
+				}
+				
+				if( preventability.selectedItem as XML ) {
+					newAccidentRowXML.@PREVENTABLE = (preventability.selectedItem as XML).@value;
+				} else {
+					delete newAccidentRowXML.@PREVENTABLE;
+				}
+				
+				newAccidentRowXML.@FATALITIES = Math.round( numFatalities.value ).toString( );
+				newAccidentRowXML.@INJURIES = Math.round( numInjuries.value ).toString( );
+				newAccidentRowXML.@DAMAGE = Math.round( amountOfDamage.value ).toString( );
+				
+				return newAccidentRowXML;
+			} // public function toAccidentRowXML( ):XML {
+		
+			
+			// -=- VEHICLE TYPE -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			[Bindable]
+			static private var vehicleTypeList:XMLListCollection;
+			
+			private static const vehicleTypeXML:XML = 
+				<entries>
+					<entry value="Commercial" label="Commercial" /> 
+					<entry value="Personal"   label="Personal" /> 
+				</entries>;
+			
+			
+			// -=- PREVENTABILITY -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			[Bindable]
+			static private var preventabilityList:XMLListCollection;
+			
+			private static const preventabilityXML:XML = 
+				<entries>
+					<entry value="N" label="Non-preventable" /> 
+					<entry value="Y" label="Preventable" /> 
+				</entries>;
+			
+			
+			// -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			static private var firstTime:Boolean = true;
+			
+			private function onInitialize( ):void {
+				if( firstTime ) {
+					vehicleTypeList = new XMLListCollection( vehicleTypeXML.entry );
+					preventabilityList = new XMLListCollection( preventabilityXML.entry );
+					
+					firstTime = false;
+				}
+				return;
+			}
+		
+			// -=- AMOUNT OF DAMAGE -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			
+			private function amountOfDamageFormat( value:Number ):String {
+				if( isNaN( value ) ) return currencyFormatter.format( 0 );
+				
+				var formatted:String = currencyFormatter.format( value );
+				if( formatted == '' ) {
+					return '$' + value.toFixed(2);
+				}
+				return formatted;				
+			}
+			
+			private function amountOfDamageParse( value:String ):Number {
+				var newValue:String = new String( value );
+				newValue = newValue.replace( new RegExp( /[\$,]/g ), ''  ); // get rid of dollar sign and comma
+				
+				var result:Number = parseFloat( newValue );
+				if( isNaN( result ) ) {
+					return 0;
+				}
+				return result; 
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<mx:CurrencyFormatter id="currencyFormatter" useNegativeSign="true" precision="0" rounding="nearest"  />
+		<mx:StringValidator source="{ natureOfAccident }" property="text" valid="validNature = true" invalid="validNature = false" />
+	</fx:Declarations>
+	<mx:Form width="100%" height="100%" labelWidth="80">
+		<mx:FormItem label="Accident #{ accidentNum }" width="100%" direction="horizontal">
+			<s:Label height="100%" styleName="formItemLabel" text="Date"  width="30"/>
+			<controls:YearMonthDayControl id="date" />
+			
+			<mx:Spacer width="100%" />
+			
+			<s:Label height="100%" styleName="formItemLabelRightAlign" text="Vehicle Type" />
+			<s:DropDownList width="150" id="vehicleType" dataProvider="{ vehicleTypeList }" labelField="@label" height="23" change="validate()">
+			</s:DropDownList>
+			
+			<mx:Spacer width="5" />
+			
+			<s:Label height="100%" styleName="formItemLabelRightAlign" text="Preventability" />
+			<s:DropDownList width="150" id="preventability" dataProvider="{ preventabilityList }" labelField="@label" height="23" change="validate()">
+			</s:DropDownList>
+			
+			
+		</mx:FormItem>
+		
+		<mx:FormItem width="100%" direction="horizontal">
+			<s:Label height="100%" styleName="formItemLabel" text="Nature of the Accident"  width="135"/>
+			<s:TextInput width="100%" id="natureOfAccident" />
+			
+			<mx:Spacer width="5" />
+			
+			<s:Label height="100%" styleName="formItemLabelRightAlign" text="Amount of Damage" />
+			<s:NumericStepper id="amountOfDamage" width="95" minimum="0" maximum="10000000" stepSize="1" snapInterval="1" valueFormatFunction="amountOfDamageFormat" valueParseFunction="amountOfDamageParse" 
+							  focusIn="amountOfDamage.textDisplay.selectAll();"/>
+			
+			<mx:Spacer width="5" />
+						
+			<s:Label height="100%" styleName="formItemLabelRightAlign" text="Fatalities" />
+			<s:NumericStepper width="50" minimum="0" maximum="100" id="numFatalities" focusIn="numFatalities.textDisplay.selectAll()" />
+			
+			<mx:Spacer width="5" />
+			
+			<s:Label height="100%" styleName="formItemLabelRightAlign" text="Injuries" />
+			<s:NumericStepper width="50" minimum="0" maximum="100" id="numInjuries" focusIn="numInjuries.textDisplay.selectAll()" />
+			
+			
+
+		</mx:FormItem>
+	</mx:Form>
+	
+</mx:Box>

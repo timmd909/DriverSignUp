@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:controls="controls.*"
+		 implements="components.IValidate"
+		 width="100%" height="{ HEIGHT }" focusEnabled="true"  >
+	<fx:Script>
+		<![CDATA[
+			public static const HEIGHT:int = 250;
+			
+			// -=- VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			private var validEmployerName:Boolean = false;
+			private var validCityName:Boolean = false;
+			private var validPosition:Boolean = false;
+			private var validReasonLeft:Boolean = false;
+			public function validate( ):Boolean {
+				var rval:Boolean = true;
+				if( !validEmployerName ) {
+					rval = false;
+					employerName.setFocus();
+				}
+				
+				if( !validCityName ) {
+					rval = false;
+					employerName.setFocus();
+				}
+				
+				if( !validPosition ) {
+					rval = false;
+					positionHeld.setFocus();
+				}
+				
+				if( !validReasonLeft ) {
+					rval = false;
+					reasonLeft.setFocus();
+				}
+				
+				return rval;
+			}
+			
+			public static const BLANK_EMPLOYER:XML = 
+				<RowEmployers NAME="" ADDR1="" CITY="" ST="" PHONE="" BEGDTE="" ENDDTE="" 
+					ZIP="" JOBPRF="" RSNRID="" TRAILERTYPE="" NUMACCIDENTS="0" PREVENTABLE="0" FMCSR="N" SSF="N" />;
+
+			
+			[Bindable]
+			public var employerNum:int = -1; 
+
+			public function toEmployerRowXML( ):XML {
+				var newEmployerRowXML:XML = new XML( BLANK_EMPLOYER );
+				
+				newEmployerRowXML.@NAME = employerName.text;
+				newEmployerRowXML.@ADDR1 = addressLine1.text;
+				newEmployerRowXML.@CITY = cityName.text;
+				
+				if( stateName.selectedItem as XML ) {
+					newEmployerRowXML.@ST = (stateName.selectedItem as XML).abbreviation;
+				} else {
+					delete newEmployerRowXML.@ST;
+				}
+				
+				if( employerPhone.text != '' ) {
+					newEmployerRowXML.@PHONE = employerPhone.text;
+				} else {
+					delete newEmployerRowXML.@PHONE;
+				}
+				
+				if( startMonth.selectedItem ) {
+					newEmployerRowXML.@BEGDTE = (startYear.value.toString( 10 )) + (startMonth.selectedItem.@value) + '01';
+				} else {
+					delete newEmployerRowXML.@BEGDTE;
+				}
+				if( endMonth.selectedItem ) {
+					newEmployerRowXML.@ENDDTE = (endYear.value.toString( 10 )) + (endMonth.selectedItem.@value) + '01';
+				} else {
+					delete newEmployerRowXML.@ENDDTE;
+				}
+				
+				if( zipCode.text != '' ) {
+					newEmployerRowXML.@ZIP = zipCode.text;
+				} else {
+					delete newEmployerRowXML.@ZIP;
+				}
+				
+				if( positionHeld.text != '' ) {
+					newEmployerRowXML.@JOBPRF = positionHeld.text;
+				} else {
+					delete newEmployerRowXML.@JOBPRF;
+				}
+				
+				if( reasonLeft.text != '' ) {
+					newEmployerRowXML.@RSNRID = reasonLeft.text;
+				} else {
+					delete newEmployerRowXML.@RSNRID;
+				}
+				
+				if( trailerType.selectedItem ) {
+					newEmployerRowXML.@TRAILERTYPE = (trailerType.selectedItem as String);
+				} else {
+					delete newEmployerRowXML.@TRAILERTYPE;
+				}
+				
+				newEmployerRowXML.@NUMACCIDENTS = numAccidents.value.toString( );
+				newEmployerRowXML.@PREVENTABLE = numPreventableAccidents.value.toString( );
+				
+				if( subjectToFMCSR.selectedValue ) {
+					newEmployerRowXML.@FMCSR = subjectToFMCSR.selectedValue;
+				} else {
+					delete newEmployerRowXML.@FMCSR;
+				}
+				if( safetySensitive.selectedValue ) {
+					newEmployerRowXML.@SSF = safetySensitive.selectedValue;
+				} else {
+					delete newEmployerRowXML.@SSF;
+				}
+				
+				return newEmployerRowXML;
+			} // public function toAccidentRowXML( ):XML {
+
+		
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<mx:StringValidator source="{ employerName }" property="text" valid="validEmployerName = true" invalid="validEmployerName = false" /> 
+		<mx:StringValidator source="{ cityName }" property="text" valid="validCityName = true" invalid="validCityName = false" /> 
+		<mx:StringValidator source="{ positionHeld }" property="text" valid="validPosition = true" invalid="validPosition = false" /> 
+		<mx:StringValidator source="{ reasonLeft }" property="text" valid="validReasonLeft = true" invalid="validReasonLeft = false" /> 
+	</fx:Declarations>
+	<mx:Form width="100%" height="100%" labelWidth="90">
+		<mx:FormItem label="Employer / " width="100%" direction="horizontal">
+			<s:Label text="Name" width="100" styleName="formItemLabelRightAlign" />
+			<s:TextInput id="employerName" width="100%" />
+		</mx:FormItem>
+		
+		<!-- -=- ADDRESS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+		<mx:FormItem label="Contract #{ employerNum }" width="100%" direction="horizontal">
+			<s:Label text="Address" width="100" styleName="formItemLabelRightAlign" />
+			<s:TextInput id="addressLine1" width="100%" />
+		</mx:FormItem>
+		<mx:FormItem label="" width="100%" direction="horizontal">
+			<s:Label text="Phone" width="100" styleName="formItemLabelRightAlign" />
+			<s:TextInput id="employerPhone" width="175" />
+		</mx:FormItem>
+		<mx:FormItem width="100%" labelStyleName="formItemLabelRightAlign" direction="horizontal">
+			<s:Label text="City" width="100"  height="100%" styleName="formItemLabelRightAlign"  />
+					 
+			<s:TextInput width="175" id="cityName" />
+			
+			<s:Label text="State" width="100" height="100%" styleName="formItemLabelRightAlign" />
+			<controls:StateDropDownList width="175" id="stateName" height="23" />
+			
+			<s:Label text="ZIP" width="100" height="100%" styleName="formItemLabelRightAlign" />
+			<s:TextInput width="60"  id="zipCode" maxChars="5" restrict="0-9" />
+			
+			<s:Label text="–" height="100%" styleName="formItemLabelRightAlign" />
+			<s:TextInput width="40"  id="zipCodeExt" restrict="0-9" />
+			
+		</mx:FormItem>
+		<!-- -=- / ADDRESS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+		
+		<!-- -=- START / END DATE -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+		<mx:FormItem label="" width="100%" direction="horizontal">
+			<s:Label text="Start Date" width="100" height="100%" styleName="formItemLabelRightAlign"  />
+			<controls:MonthDropDownList id="startMonth" width="108" />
+			<controls:YearStepper id="startYear" />
+			
+			<s:Label text="End Date" width="100" height="100%" styleName="formItemLabelRightAlign"  />
+			<controls:MonthDropDownList id="endMonth" width="107" />
+			<controls:YearStepper id="endYear" />
+			
+		</mx:FormItem>
+		<!-- -=- / START / END DATE -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+		
+		<mx:FormItem label="" width="100%" direction="horizontal">
+			<s:Label text="Position held" width="100" height="100%" styleName="formItemLabelRightAlign"  />
+			<s:TextInput width="175" id="positionHeld" />
+			
+			<s:Label text="Reason left" width="100" height="100%" styleName="formItemLabelRightAlign"  />
+			<s:TextInput width="175" id="reasonLeft" />
+			
+			<s:Label text="Type of trailer" width="100" height="100%" styleName="formItemLabelRightAlign"  />
+			<s:DropDownList id="trailerType" width="125">
+				<s:dataProvider>
+					<s:ArrayList>
+						<fx:String>Flatbed</fx:String>
+						<fx:String>Van / box</fx:String>
+						<fx:String>Tanker</fx:String>
+						<fx:String>Specialized</fx:String>
+						<fx:String>Dump</fx:String>
+						<fx:String>Rolloff</fx:String>
+						<fx:String>Car carrier</fx:String>
+						<fx:String>Straight truck</fx:String>
+						<fx:String>None</fx:String>
+						<fx:String>Other</fx:String>
+					</s:ArrayList>
+				</s:dataProvider>
+			</s:DropDownList>
+			
+		</mx:FormItem>
+		
+		<mx:FormItem label="" width="100%" direction="horizontal">
+			<s:Label text="Total number of accidents" width="200" height="100%" styleName="formItemLabelRightAlign"  />
+			<s:NumericStepper minimum="0" value="0" maximum="1000" id="numAccidents" width="75" />
+			
+			<s:Label text="Number of preventable accidents" width="200" height="100%" styleName="formItemLabelRightAlign"  />
+			<s:NumericStepper minimum="0" value="0" maximum="1000" id="numPreventableAccidents" width="75" />
+		</mx:FormItem>
+		<mx:FormItem label="" width="100%" direction="horizontal">
+			<s:Label text="Were you subject to FMCSR while working for this employer?" width="575" styleName="formItemLabelRightAlign"  />
+			<controls:YesNoRadioGroup id="subjectToFMCSR" />
+		</mx:FormItem>
+		<mx:FormItem label="" width="100%" direction="horizontal">
+			<s:Label text="Was this job designated as a &quot;Safety Sensitive Function&quot; in any DOT regulated mode subject to alcohol and drug testing requirements as required by 49 CFR Part 40" 
+					 lineBreak="toFit" width="575" styleName="formItemLabelRightAlign"  />
+			<controls:YesNoRadioGroup id="safetySensitive" />
+		</mx:FormItem>
+
+	</mx:Form>
+	
+</mx:Box>

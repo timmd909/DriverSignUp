@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 width="600" height="400" title="Debug Info" creationComplete="onCreationComplete()">
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.events.ResizeEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.Application;
+			import spark.components.PopUpAnchor;
+			
+			private function onCreationComplete( ):void {
+				(FlexGlobals.topLevelApplication as Application).addEventListener(ResizeEvent.RESIZE, function( event:ResizeEvent ):void {
+					recenter();
+				} );
+			}
+			
+			private function recenter( ):void {
+				PopUpManager.centerPopUp( this );
+			}
+			
+			public static function show( message:String, title:String, width:int = 900, height:int = 500 ):void {
+				var p:DebugBox = new DebugBox( );
+				PopUpManager.addPopUp( p, (FlexGlobals.topLevelApplication as DisplayObject), true );
+				p.title = title;
+				p.message.text = message;
+				p.width = width;
+				p.height = height;
+				PopUpManager.centerPopUp( p );
+			}
+			
+			protected function onCloseClick(event:MouseEvent):void {
+//				PopUpManager.removePopUp( (event.currentTarget as UIComponent).parent.parent as UIComponent );
+				PopUpManager.removePopUp( this ); 
+				return;
+			}
+			
+			private function onBreakLinesChange( event:Event ):void {
+				if( breakLines.selected ) {
+					message.setStyle('lineBreak', 'toFit');
+				} else {
+					message.setStyle('lineBreak', 'explicit');
+				}
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout gap="5" paddingTop="5" paddingBottom="5" paddingLeft="5" paddingRight="5" />
+	</s:layout>	
+	
+	<s:TextArea id="message" width="100%" height="100%" verticalScrollPolicy="on" fontFamily="_typewriter" lineBreak="explicit" />
+
+	<s:HGroup width="100%" gap="5" horizontalAlign="center">
+		<mx:Spacer width="50%" />
+		<s:Button label="Close" click="onCloseClick(event)" />
+		<s:HGroup width="50%" horizontalAlign="right">
+			<s:CheckBox id="breakLines" label="Break Lines" selected="false" change="onBreakLinesChange( event )"  />
+		</s:HGroup>
+	</s:HGroup>
+</s:Panel>

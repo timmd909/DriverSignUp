@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:mx="library://ns.adobe.com/flex/mx" 
+		xmlns:controls="controls.*"
+		implements="components.IValidate"
+		styleName="section" width="100%" height="100%">
+	<fx:Script>
+		<![CDATA[
+			import controls.AddressBox;
+			import controls.FelonyBox;
+			// -=- VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			public function validate( ):Boolean {
+				var rval:Boolean = true;
+				var yesNos:Array =  [
+					validDOTPhysical,
+					dui,
+					licenseSuspended,
+					recklessDriving,
+					testedPositive,
+					felony,
+					currentlyEmployed,
+					highSchoolDipoloma,
+					drivingSchool,
+					abandonedEquipment
+				];
+				for each( var curr:YesNoRadioGroup in yesNos ) {
+					if( curr.selectedValue == null ) {
+						rval = false;
+						trace( 'YesNoRadioGroup[' + curr.id + '] failed' );
+						curr.errorString = 'This is required';
+						curr.setFocus();
+					} else {
+						curr.errorString = '';
+					}
+				}
+				
+				// now check the felonies 
+				for( var i:int = 0; i < numFelonies.value; i ++ ) {
+					var currBox:FelonyBox = feloniesBox.getChildAt(i) as FelonyBox;
+					if( !currBox.validate() ) {
+						rval = false;
+						currBox.setFocus();
+					}
+				}
+				
+				return rval;
+			}
+			// -=- / VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			
+			/** Fills in the specified row entry
+			 */ 
+			public function populateXML( rowXML:XML ):void {
+				// Valid DOT physical
+				if( validDOTPhysical.selectedValue ) {
+					if( validDOTPhysical.selectedValue == 'Y' ) {
+						Common.addComment( rowXML, 'Has a valid DOT physical' );
+						rowXML.@DOT = 'Y';
+					} else {
+						Common.addComment( rowXML, 'Does NOT a valid DOT physical' );
+						rowXML.@DOT = 'N';
+					}
+				} else {
+					Common.addComment( rowXML, 'Did not specify if he/she has a valid DOT physical' );
+				}
+				
+				// DUI?
+				if( dui.selectedValue ) {
+					rowXML.@DUI = dui.selectedValue.toString();
+				} else {
+					delete rowXML.@DUI;
+				}
+
+				// License ever been suspended?
+				if( licenseSuspended.selectedValue ) {
+					rowXML.@LICSUS = licenseSuspended.selectedValue.toString();
+				} else {
+					delete rowXML.@LICSUS;
+				}
+				
+				// Convicted of reckless driving?
+				if( recklessDriving.selectedValue ) {
+					rowXML.@RCKDRV = recklessDriving.selectedValue.toString();
+				} else {
+					delete rowXML.@RCKDRV;
+				}
+				
+				// tested positive or refused?
+				if( testedPositive.selectedValue ) {
+					if( testedPositive.selectedValue == 'Y' ) {
+						Common.addComment( rowXML, 'Applicant tested positive for, or refused a test for, drugs and/or alcohol' );
+						rowXML.@DRUGS ='Y';
+					} else {
+						Common.addComment( rowXML, 'Applicant has NOT tested positive for, or refused a test for, drugs and/or alcohol' );
+						rowXML.@DRUGS ='N';
+					}
+				} else {
+					Common.addComment( rowXML, 'Applicant did not specify whether he/she has ever refused a drug test or tested positive' );
+				}
+				
+				// felonyies?
+				if( felony.selectedValue ) {
+					rowXML.@FELONY = felony.selectedValue.toString();
+				} else {
+					delete rowXML.@FELONY;
+				}
+				
+				// currently employed?
+				if( currentlyEmployed.selectedValue ) {
+					rowXML.@EMPLOYED = currentlyEmployed.selectedValue.toString();
+				} else {
+					delete rowXML.@EMPLOYED;
+				}
+				
+				// high school diploma?
+				if( highSchoolDipoloma.selectedValue ) {
+					if( highSchoolDipoloma.selectedValue == 'Y' ) {
+						Common.addComment( rowXML, 'Applicant has a high school diploma or GED' );
+						rowXML.@HSDIPLOMA = 'Y';
+					} else {
+						Common.addComment( rowXML, 'Applicant does not have a high school diploma nor GED' );
+						rowXML.@HSDIPLOMA = 'N';
+					}
+				} else {
+					Common.addComment( rowXML, 'Applicant did not specify whether he/she has, or does not have, a high school or GED' );
+				}
+				
+				// driving school?
+				if( drivingSchool.selectedValue ) {
+					if( drivingSchool.selectedValue == 'Y' ) {
+						Common.addComment( rowXML, 'Applicant passed driving school' );
+						rowXML.@DRVSCHOOL = 'Y';
+					} else {
+						Common.addComment( rowXML, 'Applicant did not pass driving school' );
+						rowXML.@DRVSCHOOL = 'N';
+					}
+				} else {
+					Common.addComment( rowXML, 'Applicant did not specify whether he or she passed driving school' );
+				}
+				
+				// abandoned equipment? 
+				if( abandonedEquipment.selectedValue ) {
+					if( abandonedEquipment.selectedValue == 'Y' ) {
+						Common.addComment( rowXML, 'Applicant HAS abandoned equipment' );
+						rowXML.@ABANDON = 'Y';
+					} else {
+						Common.addComment( rowXML, 'Applicant has NOT abandoned equipment' );
+						rowXML.@ABANDON = 'N';
+					}
+				} else {
+					Common.addComment( rowXML, 'Applicant didn\'t specify whether he or she abandoned equipment or not' );
+				}
+				
+				// felonies?
+				if( numFelonies.value > 0 ) {
+					for( var i:int = 0; i < numFelonies.value; i++ ) {
+						var currBox:FelonyBox = feloniesBox.getChildAt(i) as FelonyBox;
+						if( currBox ) rowXML.Felonies[0].appendChild( currBox.toFelonyRowXML() );
+					}
+				}
+								
+				
+			} // public function populateXML
+
+			
+			private function onNumFeloniesChange( ):void {
+				var count:int;
+				var i:int;
+				
+				if( feloniesBox.numChildren == numFelonies.value ) {
+					// already proper, do nothing
+					trace( 'no change in # of felonies' );
+					return;
+				} else if( feloniesBox.numChildren < numFelonies.value ) {
+					count = numFelonies.value - feloniesBox.numChildren;
+					for( i = 0; i < count; i ++ ) {
+						var temp:FelonyBox = new FelonyBox( );
+						temp.felonyNum = feloniesBox.numChildren + 1;
+						feloniesBox.addChild( temp );
+						feloniesBox.validateNow();
+					}
+				} else { // ( previousAddresses.length < howManyAddresses.value )
+					count = feloniesBox.numChildren - numFelonies.value;
+					
+					for( i = 0; i < count; i ++ ) {
+						trace( 'Deleting item #' + i.toString( ) );
+						feloniesBox.removeChildAt( feloniesBox.numChildren - 1 );
+						feloniesBox.validateNow();
+					}
+				}
+				
+				return;
+				
+			} // private function onNumAddressesChange( ):void 
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<!-- SECTION HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	<s:Label styleName="sectionHeader" text="Step 2 — General Information" width="100%" />
+	<!-- / SECTION HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	
+	<!-- SECTION CONTENTS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	<mx:VBox styleName="sectionContents" width="100%" height="100%">
+		<mx:Form width="100%" height="100%" labelWidth="750">
+			<mx:FormItem label="Do you have a valid DOT physical?" width="100%">
+				<controls:YesNoRadioGroup id="validDOTPhysical" />
+			</mx:FormItem>
+			<mx:FormItem label="Did you have a &quot;DUI&quot; (driving under the influence of alcohol or drugs)?" width="100%">
+				<controls:YesNoRadioGroup id="dui" />
+			</mx:FormItem>
+			<mx:FormItem label="Has your license every been suspended?" width="100%">
+				<controls:YesNoRadioGroup id="licenseSuspended" />
+			</mx:FormItem>
+			<mx:FormItem label="Have you ever been convicted of a Reckless Driving Charge?" width="100%">
+				<controls:YesNoRadioGroup id="recklessDriving" />
+			</mx:FormItem>
+			<mx:FormItem label="Have you ever tested positive or refused a test for drugs or alcohol?" width="100%">
+				<controls:YesNoRadioGroup id="testedPositive" />
+			</mx:FormItem>
+			<mx:FormItem label="Are you currently employed?" width="100%">
+				<controls:YesNoRadioGroup id="currentlyEmployed" />
+			</mx:FormItem>
+			
+			<!-- the rest of what used to be the education part -->
+			<mx:FormItem label="Do you have a high school diploma or equivalent G.E.D.?" width="100%">
+				<controls:YesNoRadioGroup id="highSchoolDipoloma" />
+			</mx:FormItem>
+			<mx:FormItem label="Did you graduate from a driving school?" width="100%">
+				<controls:YesNoRadioGroup id="drivingSchool" />
+			</mx:FormItem>
+			
+			<!-- new from Nussbaum -->
+			<mx:FormItem label="Have you ever abandoned equipment?" width="100%">
+				<controls:YesNoRadioGroup id="abandonedEquipment" />
+			</mx:FormItem>
+			<mx:FormItem label="Have you ever been convicted of a felony?" width="100%">
+				<controls:YesNoRadioGroup id="felony" />
+			</mx:FormItem>
+			<mx:FormItem label="How many times have you been convicted of a felony?" width="100%" visible="{ felony.yesRadio.selected }">
+				<s:NumericStepper id="numFelonies" minimum="0" maximum="100" change="onNumFeloniesChange( )" valueCommit="onNumFeloniesChange()" visible="{ felony.yesRadio.selected }"/>
+			</mx:FormItem>
+			<mx:Box id="feloniesBox" width="100%" />
+			
+			
+		</mx:Form>
+	</mx:VBox>
+	<!-- / SECTION CONTENTS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+</mx:Box>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:DropDownList xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				width="100" dataProvider="{ monthList }" labelField="@label"
+				initialize="onInitialize( )" height="23">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.XMLListCollection;
+
+			private static const months:XML = new XML( 
+				<months>
+					<month value="01" label="January"   />
+					<month value="02" label="February"  />
+					<month value="03" label="March"     />
+					<month value="04" label="April"     />
+					<month value="05" label="May"       />
+					<month value="06" label="June"      />
+					<month value="07" label="July"      />
+					<month value="08" label="August"    />
+					<month value="09" label="September" />
+					<month value="10" label="October"   />
+					<month value="11" label="November"  />
+					<month value="12" label="December"  />
+				</months>
+			);
+			
+			[Bindable]
+			private static var monthList:XMLListCollection; //  = new XMLListCollection( );
+			
+			private static var firstTime:Boolean = true;
+			
+			/** Performed once to create and initialize the static month data provider
+			 */
+			private function onInitialize( ):void {
+				if( !firstTime ) return; // this only gets done once 
+				
+				// monthList.addAll( new XMLListCollection( months.month ) );
+				monthList = new XMLListCollection( months.month );
+				
+				firstTime = false;
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+</s:DropDownList>

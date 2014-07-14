@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:mx="library://ns.adobe.com/flex/mx" 
+		xmlns:controls="controls.*" 
+		implements="components.IValidate"
+		width="100%" height="{ HEIGHT }" 
+		focusEnabled="true" initialize="onInitialize( )" >
+	<fx:Script>
+		<![CDATA[
+			import components.IValidate;
+			
+			import mx.collections.XMLListCollection;
+			public static const HEIGHT:int = 70;
+			
+			[Bindable]
+			public var movingViolationNum:int = -1; 
+			
+			[Bindable]
+			static private var typeOfViolationList:XMLListCollection;
+			static private var typeOfViolationXML:XML = 
+				<entries>
+					<entry label="Cargo securement" />
+					<entry label="Driving without proper license" />
+					<entry label="Driving with suspended license" />
+					<entry label="DUI/DWI" />
+					<entry label="Equipment violation" />
+					<entry label="Failure to control" />
+					<entry label="Failure to yield" />
+					<entry label="Following too close" />
+					<entry label="Hours of service" />
+					<entry label="Improper/erratic lane change" />
+					<entry label="Overweight" />
+					<entry label="Seat belt" />
+					<entry label="Speeding" />
+					<entry label="Stop Sign" />
+					<entry label="Traffic control device" />
+					<entry label="Unsafe or reckless operation" />
+					<entry label="Other" />
+				</entries>;
+			
+			[Bindable]
+			static private var penaltyList:XMLListCollection;
+			static private var penaltyXML:XML = 
+				<entries>
+					<entry label="Fine" />
+					<entry label="Points" />
+					<entry label="Fine and Points" />
+					<entry label="Suspension" />
+					<entry label="None" />
+					<entry label="Other" />
+				</entries>;
+			
+			static private var firstTime:Boolean = true; 
+			
+			/** Creates a RowMovingViolation because I'm not sure where else to put license information
+			 */
+			public function toMovingViolationsRowXML( ):XML {
+				var movingViolationXML:XML = new XML( BLANK_MOVING_VIOLATION );
+				
+				movingViolationXML.@DATE = date.toFormattedDateString();
+				if( typeOfViolation.selectedItem as XML ) {
+					movingViolationXML.@TYPE = (typeOfViolation.selectedItem as XML).@label; 
+				} else {
+					delete movingViolationXML.@TYPE;
+				}
+				
+				if( violationState.selectedItem as XML ) {
+					movingViolationXML.@ST = (violationState.selectedItem as XML).abbreviation; 
+				} else {
+					delete movingViolationXML.@ST;
+				}
+				
+				if( penalty.selectedItem as XML ) {
+					movingViolationXML.@PENALTY = (penalty.selectedItem as XML).@label;
+				} else {
+					delete movingViolationXML.@PENALTY;
+				}
+				
+				return movingViolationXML;
+			}
+
+			
+			private function onInitialize( ):void {
+				if( firstTime ) {
+					typeOfViolationList = new XMLListCollection( typeOfViolationXML.entry );
+					penaltyList = new XMLListCollection( penaltyXML.entry );
+					
+					firstTime = false;
+				}
+			}
+			
+			public static const BLANK_MOVING_VIOLATION:XML = <RowMovingViolations DATE="19990201" TYPE="Driving with suspended license" ST="PA" PENALTY="Points" />;
+			
+			
+			// -=- VALIDATE -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			public function validate( ):Boolean {
+				var rval:Boolean = true;
+				
+				if( typeOfViolation.selectedItem == null ) {
+					rval = false;
+					typeOfViolation.errorString = 'This is required';
+					typeOfViolation.setFocus();
+				} else {
+					typeOfViolation.errorString = '';
+				}
+				if( violationState.selectedItem == null ) {
+					rval = false;
+					violationState.errorString = 'This is required';
+					violationState.setFocus();
+				} else {
+					violationState.errorString = '';
+				}
+				if( penalty.selectedItem == null ) {
+					rval = false;
+					penalty.errorString = 'This is required';
+					penalty.setFocus();
+				} else {
+					penalty.errorString = '';
+				}
+				
+				return rval;
+			}
+			// -=- / VALIDATE -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<mx:Form width="100%" height="100%" labelWidth="120">
+		<mx:FormItem label="Moving Violation #{ movingViolationNum }" width="100%" direction="horizontal">
+			<s:Label width="50" height="100%" styleName="formItemLabelRightAlign" text="Date" />
+			<controls:YearMonthDayControl id="date" />
+			
+			<s:Label height="100%" width="100" styleName="formItemLabelRightAlign" text="Type of Violation" />
+			<s:DropDownList id="typeOfViolation" width="225" height="23" dataProvider="{ typeOfViolationList }" labelField="@label" change="validate()">
+			</s:DropDownList>
+				
+		</mx:FormItem>
+		<mx:FormItem width="100%" direction="horizontal">
+			<s:Label width="50" height="100%" styleName="formItemLabelRightAlign" text="State"  />
+			<!--<s:DropDownList width="215" height="23" />-->
+			<controls:StateDropDownList id="violationState" width="215" height="23" change="validate( )" />
+			
+			<s:Label height="100%" width="100" styleName="formItemLabelRightAlign" text="Penalty" />
+			<s:DropDownList id="penalty" width="225" height="23" dataProvider="{ penaltyList }" labelField="@label" change="validate( )">
+			</s:DropDownList>
+							
+		</mx:FormItem>
+	</mx:Form>
+	
+</mx:Box>

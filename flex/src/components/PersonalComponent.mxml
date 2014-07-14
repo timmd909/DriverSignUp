@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:mx="library://ns.adobe.com/flex/mx"
+		xmlns:flexlib="http://code.google.com/p/flexlib/"
+		xmlns:controls="controls.*" 
+		implements="components.IValidate"
+		horizontalScrollPolicy="off" creationComplete="onCreationComplete()"
+		styleName="section" width="100%" height="100%">
+	<fx:Script>
+		<![CDATA[
+			import controls.AddressBox;
+			
+			import mx.collections.XMLListCollection;
+			import mx.utils.StringUtil;
+			
+			import spark.events.IndexChangeEvent;
+			
+			private function onCreationComplete( ):void {
+				
+				(addressesBox.getChildAt( 0 ) as AddressBox).addressNum = 1;
+			}
+			
+			// -=- VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			private var validFirstName:Boolean = false;
+			private var validLastName:Boolean = false;
+			private var validPhone:Boolean = false;
+			private var validSSN:Array = [ false, false, false ];
+			private var validEmail:Boolean = false;
+			private var validHowDidYouHearDetails:Boolean = false;
+			
+			public function validate( ):Boolean {
+				var rval:Boolean = true;
+				
+				// HOW DID YOU HEAR HACK
+				if( howDidYouHearDetails.visible ) {
+					if( !validHowDidYouHearDetails ) {
+						rval = false;
+						trace( 'no details provided on howDidYouHear (label=' + (howDidYouHear.selectedItem as XML).@label + ')' );
+						howDidYouHearDetails.setFocus();
+					}
+				}
+				
+				if( howDidYouHear.selectedItem == null ) {
+					rval = false;
+					trace( 'howDidYouHear failed' );
+					howDidYouHear.errorString = 'Required';
+				} else {
+					howDidYouHear.errorString = '';
+				}
+				
+				for( var i:int = 0; i < numAddresses.value; i++ ) {
+					var currBox:AddressBox = addressesBox.getChildAt(i) as AddressBox;
+					trace( 'AddressBox[' + i + '] failed' );
+					if( !currBox.validate() ) {
+						rval = false;
+					}
+				} 
+				
+				if( dateOfBirth.month.selectedItem == null ) {
+					rval = false;
+					trace( 'dateOfBirth failed' );
+					dateOfBirth.month.errorString = 'Required';
+					dateOfBirth.day.errorString = 'Required';
+					dateOfBirth.year.errorString = 'Required';
+				} else {
+					dateOfBirth.month.errorString = '';
+					dateOfBirth.day.errorString = '';
+					dateOfBirth.year.errorString = '';
+				}
+				
+				if( !validEmail ) {
+					rval = false;
+					trace( 'emailAddress failed' );
+					emailAddress.setFocus();
+				}
+				if( !validSSN[2] || !validSSN[1] || !validSSN[0] ) {
+					rval = false;
+					trace( 'SSN failed' );
+					ssnNumberPart3.setFocus();
+					ssnNumberPart2.setFocus();
+					ssnNumberPart1.setFocus();
+				}
+				if( !validPhone ) {
+					rval = false;
+					trace( 'phone failed' );
+					phoneNumber.setFocus();
+				}
+				if( !validLastName ) {
+					rval = false;
+					trace( 'last name failed' );
+					lastName.setFocus();
+				}
+				if( !validFirstName ) {
+					rval = false;
+					trace( 'first name failed' );
+					firstName.setFocus();
+				}
+				
+				
+				return rval;
+			}
+			
+			
+			/** Fills in the specified row entry
+			 */ 
+			public function populateXML( rowXML:XML ):void {
+				// basic basic info and contact info
+				rowXML.@DRVFN = firstName.text;
+				rowXML.@DRVMI = ( middleName.text.length >= 1 ) ? (middleName.text.substr(0,1)) : '';
+				rowXML.@MIDDLENAME = middleName.text; 
+				rowXML.@DRVLN = lastName.text;
+				rowXML.@PHONE = phoneNumber.text; 
+				rowXML.@DRPHON2 = cellPhoneNumber.text;
+				rowXML.@SSN = ssnNumberPart1.text + ssnNumberPart2.text + ssnNumberPart3.text; 
+				rowXML.@EMAILADDR = emailAddress.text;
+				rowXML.@DOB = dateOfBirth.toFormattedDateString();
+				
+				// addressess 
+				var numAddresses:int = addressesBox.numChildren;
+				for( var i:int = 0; i < numAddresses; i++ ) {
+					var currBox:AddressBox = addressesBox.getChildAt(i) as AddressBox;
+					if( currBox ) rowXML.Addresses[0].appendChild( currBox.toAddressRowXML() ); 
+				}
+				
+				// the rest of the personal
+				if( availabilityDate.toFormattedDateString() != '' ) {
+					rowXML.@AVLDTE = availabilityDate.toFormattedDateString();
+				} else {
+					delete rowXML.@AVLDTE; 
+				}
+				
+				// how did you hear? 
+				rowXML.@ADRID = (howDidYouHear.selectedItem as XML) ? ( (howDidYouHear.selectedItem as XML).@value ) : -1;
+				if( (howDidYouHear.selectedItem as XML) && (howDidYouHear.selectedItem as XML).@detailed != null  ) { // for Nussbaum
+					rowXML.HowYouHear = (howDidYouHear.selectedItem as XML).@label;
+					Common.addComment( rowXML, 'How did you hear: ' + (howDidYouHear.selectedItem as XML).@label );
+					if( (howDidYouHear.selectedItem as XML).@detailed == true ) {
+						rowXML.HowYouHear.@DETAILS = howDidYouHearDetails.text;
+						Common.addComment( rowXML, 'How did you hear details: ' + howDidYouHearDetails.text );
+					}
+				}
+
+				// recruiter name
+//				if( recruiterName.text != '' ) 
+//					Common.addComment( rowXML, "Recruiter's name: " + recruiterName.text ); 
+				
+				// Best Time to call
+				if( bestTimeToCall.text != '' ) { 
+					Common.addComment( rowXML, 'Best time to call: ' + bestTimeToCall.text );
+					rowXML.BestTimeToCall = bestTimeToCall.text;
+				}
+			} // public function populateXML( rowXML:XML ):void {
+			
+			private function onNumAddressesChange( ):void {
+				var count:int;
+				var i:int;
+				
+				if( addressesBox.numChildren == numAddresses.value ) {
+					// already proper, do nothing
+					trace( 'no change in # of addresses' );
+					return;
+				} else if( addressesBox.numChildren < numAddresses.value ) {
+					count = numAddresses.value - addressesBox.numChildren;
+					for( i = 0; i < count; i ++ ) {
+						var temp:AddressBox = new AddressBox( );
+						temp.addressNum = addressesBox.numChildren + 1;
+						addressesBox.addChild( temp );
+						addressesBox.validateNow();
+					}
+				} else { // ( previousAddresses.length < howManyAddresses.value )
+					count = addressesBox.numChildren - numAddresses.value;
+					
+					for( i = 0; i < count; i ++ ) {
+						trace( 'Deleting item #' + i.toString( ) );
+						addressesBox.removeChildAt( addressesBox.numChildren - 1 );
+						addressesBox.validateNow();
+					}
+				}
+				
+				return;
+				
+			} // private function onNumAddressesChange( ):void 
+
+			protected function onHowDidYouHearChange(event:Event):void {
+				var selectedItem:XML = howDidYouHear.selectedItem as XML;
+				if( ! selectedItem || selectedItem.@detailed == 'false' ) {
+					howDidYouHearDetails.visible = false;
+				} else {
+					howDidYouHearDetails.visible = true;
+				}
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<mx:StringValidator source="{ firstName }" property="text" valid="validFirstName = true" invalid="validFirstName = false" />		
+		<mx:StringValidator source="{ lastName }" property="text" valid="validLastName = true" invalid="validLastName = false" />
+		<mx:StringValidator source="{ phoneNumber }" property="text" valid="validPhone = true" invalid="validPhone = false" />
+		<mx:StringValidator source="{ ssnNumberPart1 }" property="text" valid="validSSN[0] = true" invalid="validSSN[0] = false" />
+		<mx:StringValidator source="{ ssnNumberPart2 }" property="text" valid="validSSN[1] = true" invalid="validSSN[1] = false" />
+		<mx:StringValidator source="{ ssnNumberPart3 }" property="text" valid="validSSN[2] = true" invalid="validSSN[2] = false" />
+		<mx:StringValidator source="{ emailAddress }" property="text" valid="validEmail = true" invalid="validEmail = false" />
+		<mx:StringValidator source="{ howDidYouHearDetails }" property="text" valid="validHowDidYouHearDetails = true" invalid="validHowDidYouHearDetails = false" />
+	</fx:Declarations>
+	<!-- SECTION HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	<s:Label styleName="sectionHeader" text="Step 1 — Personal Information" width="100%" />
+	<!-- / SECTION HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	
+	<!-- SECTION CONTENTS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	<mx:VBox styleName="sectionContents" width="100%" height="100%">
+		
+		<mx:Form width="100%" labelWidth="100">
+			<mx:FormItem label="Full Name" width="100%" direction="horizontal">
+				<flexlib:PromptingTextInput id="firstName" prompt="First name" width="175" />
+				<flexlib:PromptingTextInput id="middleName" prompt="Middle name" width="100" />
+				<flexlib:PromptingTextInput id="lastName" prompt="Last name" width="100%" />
+			</mx:FormItem>
+			<mx:FormItem label="Phone" width="100%" direction="horizontal">
+				<flexlib:PromptingTextInput id="phoneNumber" prompt="Example: 412-555-1234" width="175" />
+				<s:Label text="Cell Phone" height="100%" width="100" styleName="formItemLabelRightAlign" />
+				<flexlib:PromptingTextInput id="cellPhoneNumber" prompt="optional" width="175" />
+				<s:Label text="Best time to call" height="100%" width="100" styleName="formItemLabelRightAlign" />
+				<flexlib:PromptingTextInput id="bestTimeToCall" width="100%" />
+			</mx:FormItem>
+			<mx:FormItem label="SSN #" width="100%" direction="horizontal">
+				<s:HGroup gap="5" width="175">
+					<s:TextInput width="30" id="ssnNumberPart1" maxChars="3" restrict="0-9" /><s:Label text="–" height="100%" styleName="formItemLabelRightAlign" />
+					<s:TextInput width="25" id="ssnNumberPart2" maxChars="2" restrict="0-9" /><s:Label text="–" height="100%" styleName="formItemLabelRightAlign" />
+					<s:TextInput width="35" id="ssnNumberPart3" maxChars="4" restrict="0-9" />
+				</s:HGroup>
+				
+				<s:Label text="Email #" height="100%" width="100" styleName="formItemLabelRightAlign" />
+				<flexlib:PromptingTextInput id="emailAddress" width="175" />
+				
+				<s:Label text="Date of birth" height="100%" width="100" styleName="formItemLabelRightAlign" />
+				<controls:YearMonthDayControl id="dateOfBirth" />
+				
+			</mx:FormItem>
+			
+		</mx:Form>
+		
+		<mx:Spacer height="5" />
+		
+		<mx:Form width="100%" labelWidth="390">
+			<mx:FormItem label="How many home addresses have you had in the past 3 years?" width="100%">
+				<s:NumericStepper minimum="1" maximum="10" id="numAddresses" value="1" change="onNumAddressesChange()"  />
+			</mx:FormItem> 
+			
+			<mx:Box width="100%" id="addressesBox">
+				<controls:AddressBox />
+			</mx:Box>
+			
+<!--			<mx:FormItem label="Have you ever worked for this company before?" width="100%">
+				<controls:YesNoRadioGroup id="haveYouWorkedBefore" />
+			</mx:FormItem> 
+			<mx:FormItem label="Have you previously applied to work for this company?" width="100%">
+				<controls:YesNoRadioGroup id="haveYouPreviouslyApplied" />
+			</mx:FormItem>-->
+			
+			<mx:FormItem label="Availability Date" width="100%">
+				<controls:YearMonthDayControl id="availabilityDate" />
+			</mx:FormItem>
+			<mx:FormItem label="How did you hear about us?" width="100%" direction="horizontal">
+<!--				<s:DropDownList width="175" labelField="@label" id="howDidYouHear" change="validate( )">-->
+				<s:DropDownList width="175" labelField="@label" id="howDidYouHear" valueCommit="onHowDidYouHearChange(event)" change="onHowDidYouHearChange( event )">
+					<s:dataProvider>
+						<!-- Nussbaum -->
+						<s:XMLListCollection>
+							<fx:XMLList xmlns="">
+								<entry value="12" detailed="false" label="Nussbaum Website" />
+								<entry value="1"  detailed="true"  label="Driver Referral" />
+								<entry value="6"  detailed="true"  label="Newspaper" />
+								<entry value="5"  detailed="true"  label="Magazine" />
+								<entry value="10" detailed="false" label="Saw Trucks" />
+								<entry value="3"  detailed="false" label="Internet Search" />
+								<entry value="9"  detailed="false" label="Rehire" />
+								<entry value="12" detailed="true"  label="Other"/> 
+							</fx:XMLList>
+						</s:XMLListCollection>
+						<!-- IEG compatible -->
+<!--						<s:XMLListCollection>
+							<fx:XMLList xmlns="">
+								<entry value="1"  label="Driver Referral" />
+								<entry value="2"  label="Flyer" />
+								<entry value="3"  label="Internet Search" />
+								<entry value="4"  label="Job Board Web" />
+								<entry value="5"  label="Magazine" />
+								<entry value="6"  label="Newspaper" />
+								<entry value="7"  label="Postcard" />
+								<entry value="8"  label="Radio" />
+								<entry value="9"  label="Rehire" />
+								<entry value="10" label="Saw Trucks" />
+								<entry value="11" label="Terminal" />
+								<entry value="12" label="Other" />
+							</fx:XMLList>	 
+						</s:XMLListCollection>-->
+						
+					</s:dataProvider>
+				</s:DropDownList>
+				<s:Label text="Please name/describe" height="100%" visible="{ howDidYouHearDetails.visible }" />
+				<s:TextInput id="howDidYouHearDetails" width="100%" visible="false" />
+			</mx:FormItem>
+<!--			<mx:FormItem label="If you spoke with a recruiter, please enter his/her name" width="100%">
+				<s:TextInput id="recruiterName" width="100%" />
+			</mx:FormItem>-->
+		</mx:Form>
+		
+	</mx:VBox>
+	<!-- / SECTION CONTENTS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+</mx:Box>

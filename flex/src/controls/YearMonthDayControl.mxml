@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:controls="controls.*">
+	<fx:Script>
+		<![CDATA[
+			import mx.utils.StringUtil;
+			public function getYear( ):int {
+				return year.value;
+			} 
+			
+			public function getMonth( ):int {
+				if( month.selectedItem ) {
+					return parseInt( (month.selectedItem as XML).@value );
+				} else {
+					trace( 'getMonth( ) called without a selected month' );
+					return -1;
+				}
+			}
+			
+			public function getDay( ):int {
+				return day.value;
+			}
+			
+			public function toFormattedDateString( ):String {
+				try {
+					var rval:String = getYear().toString( );
+					rval += (month.selectedItem as XML).@value;
+					
+					if( day.value < 1 ) { 
+						rval += '01'; // just in case
+					} else if( day.value < 10 ) {
+						rval += '0' + day.value.toString( 10 );
+					} else {
+						rval += day.value.toString( 10 );
+					}
+				} catch( error:Error ) {
+					trace( 'Error in getFormattedDateString( ) = ' + error.toString() );
+					return '';
+				}
+				return rval;
+			}
+			
+			private function clearErrors( ):void {
+				month.errorString = '';
+				day.errorString = '';
+				year.errorString = '';
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:layout>
+		<s:HorizontalLayout gap="5" paddingLeft="0" paddingRight="0" />
+	</s:layout>
+	<controls:MonthDropDownList id="month" change="clearErrors( )" />
+	<!--<controls:DayDropDownList id="day" />-->
+	<s:NumericStepper id="day" minimum="1" maximum="31" width="45" change="clearErrors( )" />
+	<controls:YearStepper id="year" change="clearErrors( )" />
+</s:Group>

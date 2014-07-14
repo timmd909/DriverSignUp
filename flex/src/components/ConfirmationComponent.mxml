@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:mx="library://ns.adobe.com/flex/mx" 
+		xmlns:controls="controls.*"
+		implements="components.IValidate"
+		styleName="section" width="100%" height="100%" creationComplete="onCreationComplete(event)">
+	<fx:Script>
+		<![CDATA[
+			import flashx.textLayout.conversion.TextConverter;
+			import flashx.textLayout.elements.TextFlow;
+			
+			import mx.events.FlexEvent;
+			
+			import spark.utils.TextFlowUtil;
+			
+			
+			// -=- VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			public function validate( ):Boolean {
+				if( agreeYesNo.selectedValue == 'Y' ) return true;
+				return false;
+			}
+			// -=- / VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			
+			/** Fills in the specified row entry
+			 */ 
+			public function populateXML( rowXML:XML ):void {
+				// miscellaneous other stuff would go here... 
+				
+				// signature
+				var newSignatureXML:XML = new XML( Common.BLANK_SIGNATURE );
+				newSignatureXML.@JPG = signature.getEncodedSig();
+				rowXML.Signatures.appendChild( newSignatureXML );
+			}
+			
+			private function onSubmitClick( ):void {
+				(parentDocument as SignUpComponent).submitApplication();
+			}
+
+			protected function onCreationComplete(event:FlexEvent):void {
+				//var 
+				contract.text = Common.CONTRACT;
+				contract.textFlow = TextConverter.importToFlow( Common.CONTRACT.toString(), TextConverter.TEXT_FIELD_HTML_FORMAT );
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:RadioButtonGroup id="agreeYesNo" />
+	</fx:Declarations>
+	<!-- SECTION HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	<s:Label styleName="sectionHeader" text="Final Step — Confirmation" width="100%" />
+	<!-- / SECTION HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	
+	<!-- SECTION CONTENTS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	<mx:VBox styleName="sectionContents" width="100%" height="100%" >
+		
+		<s:TextArea width="100%" height="100%" minHeight="100" text="Loading contract" id="contract" editable="false" borderVisible="false" >
+		</s:TextArea>
+		
+		<controls:SignatureControl id="signature" width="100%" />
+		<s:HGroup width="100%">
+			<s:Label text="Use your mouse to sign in the gray box above" />
+			<mx:Spacer width="100%" />
+			<mx:Button click="signature.clearSignature()" label="Clear Signature" />
+		</s:HGroup>
+		
+		<mx:Spacer height="5" />
+		
+		<s:HGroup gap="0" width="100%">
+			<s:Label width="100%" lineBreak="toFit" height="35" text="{ Common.CONFIRMATION_TEXT }" />
+			<s:HGroup width="250" horizontalAlign="right">
+				<s:RadioButton label="Yes, I agree" group="{ agreeYesNo }" value="Y" />
+				<s:RadioButton label="No, I do not" group="{ agreeYesNo }" value="N" />
+			</s:HGroup>
+		</s:HGroup>
+		
+		<s:HGroup width="100%" horizontalAlign="center">
+			<mx:Button label="Submit Application" enabled="{ agreeYesNo.selectedValue == 'Y' }" click="onSubmitClick()" />
+		</s:HGroup>
+		
+		<mx:Spacer height="5" />
+	</mx:VBox>
+	<!-- / SECTION CONTENTS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+</mx:Box>

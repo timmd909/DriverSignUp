@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<actionScriptProperties mainApplicationPath="signup.mxml" projectUUID="63ab3ebb-9c62-4a3b-97d3-9803ba7eb4ac" version="6">
+  <compiler additionalCompilerArguments="-locale en_US" autoRSLOrdering="true" copyDependentFiles="true" flex3CompatMode="false" fteInMXComponents="false" generateAccessible="true" htmlExpressInstall="true" htmlGenerate="true" htmlHistoryManagement="true" htmlPlayerVersionCheck="true" includeNetmonSwc="false" outputFolderLocation="/Users/tim/Sites/driversignup.com/public_html/demo" outputFolderPath="bin-debug" rootURL="http://localhost/~tim/driversignup.com/public_html/demo" sourceFolderPath="src" strict="true" targetPlayerVersion="0.0.0" useApolloConfig="false" useDebugRSLSwfs="true" verifyDigests="true" warn="true">
+    <compilerSourcePath/>
+    <libraryPath defaultLinkType="0">
+      <libraryPathEntry kind="4" path="">
+        <excludedEntries>
+          <libraryPathEntry kind="3" linkType="1" path="${PROJECT_FRAMEWORKS}/libs/flex.swc" useDefaultLinkType="false"/>
+        </excludedEntries>
+      </libraryPathEntry>
+      <libraryPathEntry kind="1" linkType="1" path="libs"/>
+      <libraryPathEntry kind="3" linkType="1" path="${DOCUMENTS}/external/flexlib-2.6-M2.swc" useDefaultLinkType="false"/>
+    </libraryPath>
+    <sourceAttachmentPath/>
+  </compiler>
+  <applications>
+    <application path="signup.mxml"/>
+    <application path="SignatureDemo.mxml"/>
+  </applications>
+  <modules/>
+  <buildCSSFiles>
+    <buildCSSFileEntry destPath="bin-debug" sourcePath="src/css/signup.css"/>
+  </buildCSSFiles>
+</actionScriptProperties>

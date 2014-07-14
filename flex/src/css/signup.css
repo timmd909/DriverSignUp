@@ -1,0 +1,108 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+global {
+	fontSize: 12;
+	color: #000000;
+	chromeColor: #8ab0e5;	
+}
+
+mx|Button {
+	fontSize: 12;
+	fontWeight: normal;
+	corner-radius: 0;
+	padding-top: 2;
+	padding-bottom: 2;
+}
+
+mx|Form {
+	padding-left: 0;
+	padding-bottom: 0;
+	padding-right: 0;
+	padding-top: 0;
+	indicatorGap: 5;
+}
+	mx|FormItem {
+		padding-left: 0;
+		padding-bottom: 0;
+		padding-right: 0;
+		padding-top: 0;
+	}
+	mx|FormItemLabel {
+		text-align: left;
+		padding-right: 0;
+		padding-left: 0;
+	}
+
+s|Label {
+	vertical-align: middle;
+	text-align: left;
+}
+
+s|DropDownList {
+	text-align: left;
+}
+
+s|NumericStepper {
+	text-align: right;
+}
+
+/* The area directly behind, above, and below the center content */
+.signUpBox {
+	background-alpha: 0;
+	background-color: #ffffff;
+}
+
+/* -=- GENERIC -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- */
+.formItemLabel {
+	text-align: left;
+	padding-right: 0;
+	padding-left: 0;
+}
+.formItemLabelRightAlign {
+	text-align: right;
+	padding-right: 0;
+	padding-left: 0;
+}
+
+/* -=- HEADER RELATED -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- */
+.companyName {
+	fontSize: 24;
+	fontWeight: bold;
+	color: #25569a;
+}
+
+.companyDescription {
+	fontSize: 14;
+	fontWeight: normal;
+	color: #183966;
+}
+
+/* -=- SECTION RELATED -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- */
+.section {
+	borderThickness: 1;
+	borderColor: #1e4f94;
+	borderStyle: solid;
+}
+.sectionHeader {
+	fontSize: 15;
+	backgroundColor: #1e4f94;
+	color: #ffffff;
+	paddingLeft: 15;
+	paddingRight: 15;
+	paddingTop: 5;
+	paddingBottom: 5;
+	
+	trackingRight: 2;
+	letterSpacing: 2;
+	fontWeight: bold;
+	kerning: on;
+}
+.sectionContents {
+	paddingLeft: 15;
+	paddingRight: 15;
+	paddingTop: 5;
+	paddingBottom: 5;
+	verticalGap: 5;
+}

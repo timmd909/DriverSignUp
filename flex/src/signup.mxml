@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   xmlns:controls="controls.*" xmlns:components="components.*"
+			   skinClass="skins.SignUpApplicationSkin"
+			   width="100%" height="100%"
+			   creationComplete="onCreationComplete()" >
+	<fx:Style source="css/signup.css" />
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import skins.SignUpApplicationSkin;
+			
+			public static const PROMPT_STATE:String = 'prompt';
+			public static const DEMO_STATE:String = 'demo';
+			
+			[Bindable]
+			private var validEmailAddress:Boolean = false;
+			
+			private function onCreationComplete( ):void {
+				Common.EXIT_URL = 'http://www.driversignup.com';
+//				emailValidator.validate( );
+				emailAddress.setFocus();
+				
+				return;
+			}
+			
+			private function onCancelClick( ):void {
+				var url:URLRequest = new URLRequest( Common.EXIT_URL );
+				navigateToURL( url, '_self' );
+			}
+			
+			private function onIAgreeClick( ):void {
+				Common.EMAIL_ADDRESS = emailAddress.text;
+				currentState = DEMO_STATE;
+			}
+			
+			private static const LEGALESE:String = 'Please enter your email address so we can email you a copy of your completed DriverSignUp application form.\n' + 
+				'\n' + 
+				'We will use this email to contact you to see if you are interested in finding out more about Driver SignUp and IEG Systems. If you aren\'t, we won\'t keep bothering you. ' +
+				'We will never sell or rent your email address to anyone.  Our privacy policy can be found at http://driversignup.com/privacy.html, and our terms can be found at http://driversignup.com/terms.html.\n' + 
+				'\n' + 
+				'By clicking "I Agree" you are agreeing to the Terms and Conditions of using this site.';
+			
+			private function demoComplete( signUpComponent:SignUpComponent ):void {
+				signUp.submitResult = function( event:ResultEvent ):void {
+					
+					// Send the message - let the user know we're about to redirect
+					Common.EXIT_URL = 'http://driversignup.com/contact-us.html';
+					Alert.show( "The demo is complete. You'll now be redirected back to the main DriverSignUp.com website. You should be receiving an example application submission email to the address you previously specified", 
+						'Demo Complete', Alert.OK, null, 
+						function( event:CloseEvent ):void {
+							onCancelClick();
+						} 
+					);
+				};
+				
+				// DEFAULT NORMAL WAY OF DOING THINGS 
+				var params:Object = new Object( );
+				params.xml = signUp.generateXML().toXMLString();
+				params.emailAddress = Common.EMAIL_ADDRESS;
+				signUp.submitService.url = Common.SUBMIT_URL; // IMPORTANT THIS IS DONE NOW! Just in case the value has changed, data binding wouldn't be able to detect this has changed 
+				signUp.submitService.send( params );
+				
+			} // private function demoComplete( signUpComponent:SignUpComponent ):void {
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<mx:EmailValidator id="emailValidator" property="text" source="{ emailAddress }" valid="validEmailAddress=true" invalid="validEmailAddress=false" />
+	</fx:Declarations>
+	
+	<s:states>
+		<s:State name="prompt" />
+		<s:State name="demo" />
+	</s:states>
+	
+	
+	<s:VGroup width="100%" height="100%" horizontalAlign="center" verticalAlign="middle" includeIn="prompt">
+		<mx:VBox width="500" horizontalAlign="center">
+			
+			<s:Label styleName="sectionHeader" text="DriverSignUp.com™ Demo" width="100%" />
+			<s:TextArea width="100%" height="100" editable="false" text="{ LEGALESE }" paddingBottom="10" paddingRight="10" paddingTop="10" paddingLeft="10" color="#666666" verticalScrollPolicy="on" />
+			
+			<s:HGroup width="100%" horizontalAlign="right">
+				<s:HGroup width="100%">
+					<s:Label text="Email Address" height="100%" verticalAlign="middle" />
+					<s:TextInput width="100%" id="emailAddress" text="{ ( Common.SHOW_XML )?Common.EMAIL_ADDRESS:'' }" change="emailValidator.validate( ); Common.EMAIL_ADDRESS = emailAddress.text" />
+				</s:HGroup>
+				<mx:Spacer width="20" />
+				<s:Button label="Cancel" click="onCancelClick()" />
+				<s:Button label="I agree" click="onIAgreeClick( )" enabled="{validEmailAddress}" />
+			</s:HGroup>
+			
+		</mx:VBox>
+	</s:VGroup>
+	
+	<components:SignUpComponent id="signUp" includeIn="demo" finished="{ demoComplete }" />
+	
+	
+</s:Application>

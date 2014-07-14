@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Scroller xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			xmlns:s="library://ns.adobe.com/flex/spark" 
+			xmlns:mx="library://ns.adobe.com/flex/mx"
+			xmlns:components="components.*"
+			width="100%" height="100%" 
+			horizontalScrollPolicy="off" verticalScrollPolicy="auto" 
+			styleName="signUpBox">
+	<fx:Script>
+		<![CDATA[
+			import controls.AccidentBox;
+			import controls.AddressBox;
+			import controls.EmployerBox;
+			import controls.FelonyBox;
+			import controls.LicenseBox;
+			import controls.MovingViolationBox;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.effects.AddAction;
+			
+			public function onExitClick( ):void {
+				Alert.show( 'Are you sure you wish to exit without completing the application?', 'Exit Confirmation', Alert.YES|Alert.NO, null, 
+					function( event:CloseEvent ):void {
+						if( event.detail == Alert.NO ) return;
+						var url:URLRequest = new URLRequest( Common.EXIT_URL );
+						navigateToURL( url, '_self' );
+						
+					}, null, Alert.NO );
+				return;
+			} // private function onExitClick( ):void 
+			
+			
+			private function onShowXMLClick( ):void {
+				DebugBox.show( generateXML().toString(), 'New Row' );
+			} // private function onShowXMLClick( ):void {
+			
+			public function generateXML( ):XML {
+				var newRowXML:XML = new XML( Common.BLANK_ROW );
+				personalComponent.populateXML( newRowXML );
+				generalComponent.populateXML( newRowXML );
+				licenseComponent.populateXML( newRowXML );
+				accidentsComponent.populateXML( newRowXML );
+				employersComponent.populateXML( newRowXML );
+				movingViolationsComponent.populateXML( newRowXML );
+				confirmationComponent.populateXML( newRowXML );
+				return newRowXML;
+			}
+			
+			// -=- SUBMIT -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- // 
+			
+			public function submitApplication( ):void {
+				finished( this );
+			}
+
+			private var _submitResult:Function = 
+				function( event:ResultEvent ):void {
+					DebugBox.show( event.message.body.toString(), 'Submitted Application' );
+				};
+			public function get submitResult( ):Function {
+				return _submitResult;
+			}
+			public function set submitResult( value:Function ):void {
+				_submitResult = value;
+			}
+			
+			private var _submitFault:Function = 
+				function( event:FaultEvent ):void {
+					// DebugBox.show( event.message.body.toString() + '\n\n' + event.toString(), 'Error Submitting Application', 700, 350 );
+					DebugBox.show( event.toString(), 'Error Submitting Application', 700, 350 );
+				};
+			
+			public function get submitFault( ):Function { 
+				return _submitFault;
+			}
+			public function set submitFault( value:Function ):void {
+				_submitFault = value;
+			}
+			
+			// -=- FINISHED - All done, now what? -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			private var _finished:Function = function( signUpComponent:SignUpComponent ):void {
+				trace( 'Default finished( ) function being used' );
+				
+				// DEFAULT NORMAL WAY OF DOING THINGS 
+				var params:Object = new Object( );
+				params.xml = generateXML().toXMLString();
+				submitService.url = Common.SUBMIT_URL; // IMPORTANT THIS IS DONE NOW! Just in case the value has changed, data binding wouldn't be able to detect this has changed 
+				submitService.send( params );
+			}; 
+			
+			public function get finished():Function {
+				return _finished;
+			}
+			
+			public function set finished(value:Function):void {
+				_finished = value;
+			}
+			
+			
+			// -=- AUTO FILL -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			private function onAutoFillClick( ):void {
+				Alert.show( "This feature is for demonstration only. Using this functionaltiy will erase all of the information you've entered, replacing it with sample data.", 'Auto-fill confirmation', Alert.YES|Alert.NO, null, 
+					onAutoFillClickConfirmed, null, Alert.NO );
+			}
+			
+			private function onAutoFillClickConfirmed( event:CloseEvent ):void {
+				if( event.detail == Alert.NO ) return;
+				
+				// PERSONAL COMPONENT
+				personalComponent.firstName.text = "John";
+				personalComponent.middleName.text = "M";
+				personalComponent.lastName.text = "Doe";
+				
+				personalComponent.phoneNumber.text = "412-555-1234";
+				personalComponent.cellPhoneNumber.text = "412-555-5678";
+				personalComponent.bestTimeToCall.text = "Not during dinner";
+				personalComponent.ssnNumberPart1.text = "111";
+				personalComponent.ssnNumberPart2.text = "22";
+				personalComponent.ssnNumberPart3.text = "4444";
+				personalComponent.emailAddress.text = "noreply@driversignup.com";
+				personalComponent.dateOfBirth.month.selectedIndex = 1;
+				personalComponent.dateOfBirth.day.value = 4;
+				personalComponent.dateOfBirth.year.value = 2004;
+				
+				personalComponent.numAddresses.value = 1;
+				
+				( personalComponent.addressesBox.getChildAt( 0 ) as AddressBox ).addressLine1.text = '555 Somestreet Drive';
+				( personalComponent.addressesBox.getChildAt( 0 ) as AddressBox ).addressLine2.text = 'Apt 987';
+				( personalComponent.addressesBox.getChildAt( 0 ) as AddressBox ).cityName.text = 'Acme Town';
+				( personalComponent.addressesBox.getChildAt( 0 ) as AddressBox ).stateName.selectedIndex = 42;
+				( personalComponent.addressesBox.getChildAt( 0 ) as AddressBox ).zipCode.text = '50005';
+				( personalComponent.addressesBox.getChildAt( 0 ) as AddressBox ).zipCodeExt.text = '2222';
+				
+				personalComponent.availabilityDate.month.selectedIndex = 4;
+				personalComponent.availabilityDate.day.value = 15;
+				personalComponent.availabilityDate.year.value = 2011;
+				
+				personalComponent.howDidYouHear.selectedIndex = 2;
+				personalComponent.howDidYouHearDetails.text = 'Shocking Details';
+				
+//				personalComponent.recruiterName.text = 'Robin of Nottingham';
+				
+				// GENERAL COMPONENT
+				viewStack.selectedIndex = 1;
+				generalComponent.validDOTPhysical.selectedValue = 'Y';
+				generalComponent.dui.selectedValue = 'Y';
+				generalComponent.licenseSuspended.selectedValue = 'Y';
+				generalComponent.recklessDriving.selectedValue = 'N';
+				generalComponent.testedPositive.selectedValue = 'Y';
+				generalComponent.felony.selectedValue = 'Y';
+				generalComponent.currentlyEmployed.selectedValue = 'N';
+				generalComponent.highSchoolDipoloma.selectedValue = 'N';
+				generalComponent.drivingSchool.selectedValue = 'Y';
+				generalComponent.abandonedEquipment.selectedValue = 'Y';
+				
+				generalComponent.numFelonies.value = 1;
+				generalComponent.validateNow();
+				( generalComponent.feloniesBox.getChildAt(0) as FelonyBox ).circumstance.text = 'J-walking';
+				( generalComponent.feloniesBox.getChildAt(0) as FelonyBox ).convictionDate.month.selectedIndex = 10;
+				
+				// LICENSE COMPONENT
+				viewStack.selectedIndex = 2;
+				licenseComponent.numLicenses.value = 1;
+				licenseComponent.validateNow();
+				
+				
+				( licenseComponent.licenseBox.getChildAt( 0 ) as LicenseBox ).cdlNumber.text = '564123';
+				( licenseComponent.licenseBox.getChildAt( 0 ) as LicenseBox ).issueState.selectedIndex = 44;
+				( licenseComponent.licenseBox.getChildAt( 0 ) as LicenseBox ).expirationMonth.selectedIndex = 6;
+				( licenseComponent.licenseBox.getChildAt( 0 ) as LicenseBox ).expirationYear.value = 2014;
+				( licenseComponent.licenseBox.getChildAt( 0 ) as LicenseBox ).hazmat.selectedValue = 'Y';
+				( licenseComponent.licenseBox.getChildAt( 0 ) as LicenseBox ).tanker.selectedValue = 'N';
+				( licenseComponent.licenseBox.getChildAt( 0 ) as LicenseBox ).doublesTriples.selectedValue = 'Y';
+				
+				// ACCIDENTS COMPONENT
+				viewStack.selectedIndex = 3;
+				accidentsComponent.numAccidents.value = 1;
+				accidentsComponent.validateNow();
+				
+				( accidentsComponent.accidentsBox.getChildAt( 0 ) as AccidentBox ).date.month.selectedIndex = 10;
+				( accidentsComponent.accidentsBox.getChildAt( 0 ) as AccidentBox ).date.day.value = 12;
+				( accidentsComponent.accidentsBox.getChildAt( 0 ) as AccidentBox ).date.year.value = 2001;
+				( accidentsComponent.accidentsBox.getChildAt( 0 ) as AccidentBox ).vehicleType.selectedIndex = 1;
+				( accidentsComponent.accidentsBox.getChildAt( 0 ) as AccidentBox ).preventability.selectedIndex = 0;
+				( accidentsComponent.accidentsBox.getChildAt( 0 ) as AccidentBox ).natureOfAccident.text = 'I would rather not say';
+				( accidentsComponent.accidentsBox.getChildAt( 0 ) as AccidentBox ).amountOfDamage.value = 50000;
+				( accidentsComponent.accidentsBox.getChildAt( 0 ) as AccidentBox ).numFatalities.value = 1;
+				( accidentsComponent.accidentsBox.getChildAt( 0 ) as AccidentBox ).numInjuries.value = 154;
+				
+				// ACCIDENTS COMPONENT
+				viewStack.selectedIndex = 4;
+				employersComponent.numEmployers.value = 2;
+				employersComponent.validateNow();
+				
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).employerName.text = 'First Co.';
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).addressLine1.text = '2nd First Street';
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).employerPhone.text = '4125551212';
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).cityName.text = 'Springfield';
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).stateName.selectedIndex = 20;
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).zipCode.text = '12345';
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).startMonth.selectedIndex = 3;
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).startYear.value = 2002;
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).endMonth.selectedIndex = 4;
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).endYear.value = 2003;
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).positionHeld.text = 'Secretary';
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).reasonLeft.text = 'not a people person';
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).trailerType.selectedIndex = 2;
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).numAccidents.value = 2;
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).numPreventableAccidents.value = 1;
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).subjectToFMCSR.selectedValue = 'Y';
+				( employersComponent.employersBox.getChildAt( 0 ) as EmployerBox ).safetySensitive.selectedValue = 'N';
+
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).employerName.text = 'Say Kund Employer';
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).addressLine1.text = '101 Second Ave';
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).employerPhone.text = '5555551234';
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).cityName.text = 'Dryfield';
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).stateName.selectedIndex = 25;
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).zipCode.text = '54321';
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).startMonth.selectedIndex = 5;
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).startYear.value = 2003;
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).endMonth.selectedIndex = 6;
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).endYear.value = 2008;
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).positionHeld.text = 'driver';
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).reasonLeft.text = 'I like being on my feet';
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).trailerType.selectedIndex = 4;
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).numAccidents.value = 100;
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).numPreventableAccidents.value = 99;
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).subjectToFMCSR.selectedValue = 'N';
+				( employersComponent.employersBox.getChildAt( 1 ) as EmployerBox ).safetySensitive.selectedValue = 'Y';
+				
+				
+				// MOVING VIOLATION COMPONENT
+				viewStack.selectedIndex = 5;
+				movingViolationsComponent.numMovingViolations.value = 1;
+				movingViolationsComponent.validateNow();
+				
+				( movingViolationsComponent.movingViolationsBox.getChildAt( 0 ) as MovingViolationBox ).date.month.selectedIndex = 7;
+				( movingViolationsComponent.movingViolationsBox.getChildAt( 0 ) as MovingViolationBox ).date.day.value = 9;
+				( movingViolationsComponent.movingViolationsBox.getChildAt( 0 ) as MovingViolationBox ).date.year.value = 2002;
+				( movingViolationsComponent.movingViolationsBox.getChildAt( 0 ) as MovingViolationBox ).typeOfViolation.selectedIndex = 6;
+				( movingViolationsComponent.movingViolationsBox.getChildAt( 0 ) as MovingViolationBox ).violationState.selectedIndex = 10;
+				( movingViolationsComponent.movingViolationsBox.getChildAt( 0 ) as MovingViolationBox ).penalty.selectedIndex = 4;
+				
+				// CONFIRMATION COMPONENT
+				viewStack.selectedIndex = 5;
+				confirmationComponent.validateNow();
+				// don't do the confirmation part
+				
+				viewStack.selectedIndex = 0;	
+				personalComponent.validateNow();
+			}
+			
+			// -=- / AUTO FILL -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			
+						
+			protected function onPreviousClick(event:MouseEvent):void {
+				viewStack.selectedIndex = viewStack.selectedIndex-1;
+			} // protected function onPreviousClick(event:MouseEvent):void {
+			
+			protected function onNextClick(event:MouseEvent):void {
+				if( ( viewStack.selectedChild as IValidate ).validate() == false ) {
+					Alert.show( "Errors found on page. Please correct before continuing.", "ERROR" );	
+				} else {
+					viewStack.selectedIndex = viewStack.selectedIndex+1;
+				}
+			} // protected function onNextClick(event:MouseEvent):void {
+			
+
+			protected function onSubmitResult(event:ResultEvent):void {
+				submitResult( event );
+			}
+			
+			protected function onSubmitFault(event:FaultEvent):void {
+				trace( "Caught a fault!" + event.toString() );
+				submitFault( event );
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+<!--		<s:HTTPService id="submitService" resultFormat="e4x" method="POST" result="onSubmitResult(event)" fault="onSubmitFault(event)" />-->
+		<s:HTTPService id="submitService" resultFormat="e4x" method="POST" result="onSubmitResult(event)" fault="onSubmitFault(event)" showBusyCursor="true" />
+	</fx:Declarations>
+	
+	<!-- VGroup to center the rest -->
+	<s:VGroup width="100%" height="100%" horizontalAlign="center">
+		
+		<!--<s:VGroup width="950" height="100%">-->
+		<mx:VBox width="970" height="100%" styleName="signUpBox" paddingBottom="5" paddingLeft="10" paddingRight="10" paddingTop="5" >
+			<!-- HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+			<s:HGroup verticalAlign="middle" gap="5" width="100%">
+				<mx:Image source="{ Common.LOGO_DATA }" width="{ Common.LOGO_WIDTH }" height="{ Common.LOGO_HEIGHT }" />
+				<s:VGroup verticalAlign="middle" height="100%" >
+					<s:Label id="companyName" text="{ Common.COMPANY_NAME }" styleName="companyName" />
+					<s:Label id="companyDescription" text="{ Common.COMPANY_DESCRIPTION }" styleName="companyDescription" />
+				</s:VGroup>
+				<mx:Spacer width="100%" />
+				<mx:Button label="Back to website" id="backButton" click="onExitClick()" />
+			</s:HGroup>
+			<!-- / HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+			
+			<!-- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+			<mx:ViewStack id="viewStack" selectedIndex="0" width="100%" height="100%" minHeight="200" creationPolicy="all">
+				<components:PersonalComponent id="personalComponent" />
+				<components:GeneralComponent id="generalComponent" />
+				<components:LicenseComponent id="licenseComponent" />
+				<components:AccidentsComponent id="accidentsComponent" />
+				<components:EmployersComponent id="employersComponent" />
+				<components:MovingViolationsComponent id="movingViolationsComponent" />
+				<components:ConfirmationComponent id="confirmationComponent" />
+			</mx:ViewStack>
+			<!-- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+			
+			<!-- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+			<s:HGroup horizontalAlign="right" width="100%">
+				<s:Button label="Auto-fill" click="onAutoFillClick( )" visible="{ Common.SHOW_AUTOFILL }"
+						  toolTip="Auto-fills all the fields with sample data. This will erase input you currently have entered." />
+				<s:Button label="Show XML" visible="{ Common.SHOW_XML }" click="onShowXMLClick( )" />
+				<mx:Spacer width="100%" />
+				<mx:Button width="100" label="Previous" enabled="{ viewStack.selectedIndex &gt; 0 }" click="onPreviousClick(event)" />
+				<mx:Button width="100" label="Next" enabled="{ viewStack.selectedIndex &lt; viewStack.length - 1 }" click="onNextClick(event)" />
+			</s:HGroup>
+			<!-- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+			
+			
+		</mx:VBox>		
+	</s:VGroup>
+	<!-- / VGroup to center the rest -->
+</s:Scroller>

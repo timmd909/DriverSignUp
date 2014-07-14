@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:controls="controls.*"
+		 implements="components.IValidate"
+		 styleName="section" width="100%" height="100%" initialize="onInitialize( )">
+	<fx:Script>
+		<![CDATA[
+			import controls.AccidentBox;
+			import controls.EmployerBox;
+			
+			public static const MAX_EMPLOYERS:int = 15;
+			
+			private var employersArray:Array;
+			
+			
+			// -=-VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			
+			public function validate( ):Boolean {
+				for( var i:int = 0; i < numEmployers.value; i++ ) {
+					var currBox:EmployerBox = employersBox.getChildAt(i) as EmployerBox;
+					if( !currBox.validate( ) ) return false;
+				}
+				return true;
+			} // public function validate( ):Boolean {
+			
+			
+			// -=- / VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- // 
+
+			private function onInitialize( ):void {
+				var i:int;
+				employersArray = new Array( );
+				
+				for( i = 0; i < MAX_EMPLOYERS; i ++ ) {
+					var temp:EmployerBox = new EmployerBox( );
+					temp.employerNum = i+1;
+					employersArray.push( temp );
+				}
+				
+				return;
+			} // private function onInitialize( ):void 
+			
+			
+			private function onNumEmployersChange( ):void {
+				var i:int;
+				
+				if( employersBox.numChildren == numEmployers.value ) {
+				
+				} else if( employersBox.numChildren < numEmployers.value ) { // new value is more
+					for( i = employersBox.numChildren; i < numEmployers.value; i ++ ) {
+						employersBox.addChild( employersArray[i] );
+					}
+				} else { // new value is less
+					for( i = employersBox.numChildren-1; employersBox.numChildren > numEmployers.value; i -- ) { 
+						employersBox.removeChildAt( i );
+					}
+				}				
+				
+				return;
+			} // private function 
+			
+			/** Fills in the specified row entry
+			 */ 
+			public function populateXML( rowXML:XML ):void {
+				if( rowXML.Employers ) delete rowXML.Employers;
+				
+				rowXML.appendChild( getEmployersXML() );
+			} // public function populateXML( rowXML:XML ):void {
+			
+			public function getEmployersXML( ):XML {
+				var employersXML:XML = <Employers />;
+				var currentBox:EmployerBox;
+				var numEmployers:int = employersBox.numChildren;
+				for( var i:int = 0; i < numEmployers; i++ ) {
+					currentBox = (employersBox.getChildAt( i ) as EmployerBox);	
+					employersXML.appendChild(  currentBox.toEmployerRowXML() );
+				} // end for
+				
+				return employersXML;
+			}
+			
+			private function onShowXMLClick( ):void {
+				DebugBox.show( getEmployersXML().toXMLString(), 'Accidents XML' );
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<!-- SECTION HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	<s:Label styleName="sectionHeader" text="Step 5 — Previous Employers" width="100%" />
+	<!-- / SECTION HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	
+	<!-- SECTION CONTENTS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	<mx:VBox styleName="sectionContents" width="100%" height="100%">
+		<s:Label text="Please begin with your most recent job and work backwards in order, listing your employers/contracts for the past 10 years." width="100%" lineBreak="toFit" />
+		<s:Label text="All time must be accounted for, including military service, self-employment and periods of unemployment." width="100%" lineBreak="toFit" />
+		<mx:Form width="100%" paddingLeft="0" paddingRight="0">
+			<mx:FormItem width="100%" label="How many previous employers and/or contracts have you had in the past 10 years?" direction="horizontal">
+				<s:NumericStepper id="numEmployers" minimum="0" maximum="{ MAX_EMPLOYERS }" snapInterval="1" stepSize="1" valueCommit="onNumEmployersChange()" />
+			</mx:FormItem>
+		</mx:Form>
+		
+		<mx:Box id="employersBox" width="100%" />
+		
+	</mx:VBox>
+	<!-- / SECTION CONTENTS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+</mx:Box>

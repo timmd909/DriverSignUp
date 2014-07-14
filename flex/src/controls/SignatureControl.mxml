@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		   xmlns:s="library://ns.adobe.com/flex/spark" 
+		   xmlns:mx="library://ns.adobe.com/flex/mx" 
+		   width="100%" height="140"  
+		   backgroundColor="#CCCCCC" clipContent="true" 
+		   creationComplete="onCreationComplete()" resize="updateCanvas()"
+		   errorString="{ (_emptySignature &amp;&amp; !disableErrorString )?'A signature is required':'' }">
+	<!--maxWidth="900"-->
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.events.CloseEvent;
+			import mx.graphics.ImageSnapshot;
+			import mx.graphics.codec.JPEGEncoder;
+			import mx.graphics.codec.PNGEncoder;
+			import mx.managers.PopUpManager;
+			import mx.utils.Base64Encoder;
+			private var sigGraphics:Graphics;
+			
+			private var drawing:Boolean = false;
+			private var inBounds:Boolean = false;
+			
+			public static const LINE_THICKNESS:int = 2;
+			
+			[Bindable]
+			public var disableErrorString:Boolean = false;
+			
+			[Bindable]
+			private var _emptySignature:Boolean = true;
+			public function get emptySignature( ):Boolean {
+				return _emptySignature;
+			}
+			
+			private var previousX:int = -1;
+			private var previousY:int = -1;
+			
+			private function onCreationComplete( ):void {
+				updateCanvas();
+			} // private function onCreationComplete( ):void {
+			
+			private function clamp( number:int, low:int, high:int ):int {
+				if( number < low ) return low;
+				if( number > high ) return high;
+				return number;
+			}
+			
+			private function updateCanvas( ):void {
+				sigGraphics = signatureCanvas.graphics;
+				sigGraphics.beginFill( 0xFFFFFF );
+				sigGraphics.drawRect( 0, 0, width, height );
+				sigGraphics.endFill( );
+				
+				signatureCanvas.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown, false, 0, true ); // weakly referenced
+				signatureCanvas.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove, false, 0, true ); // weakly referenced
+				signatureCanvas.addEventListener(MouseEvent.MOUSE_UP,   onMouseUp,   false, 0, true ); // weakly referenced
+				signatureCanvas.addEventListener(MouseEvent.MOUSE_OUT,  onMouseOut,  false, 0, true ); // weakly referenced
+				signatureCanvas.addEventListener(MouseEvent.MOUSE_OVER, onMouseOver, false, 0, true ); // weakly referenced
+			} // private function updateCanvas( ):void {
+			
+			private function onMouseDown( event:MouseEvent ):void {
+				drawing = true;
+				inBounds = true;
+			}
+			private function onMouseMove( event:MouseEvent ):void {
+				// if there's no previous mouse position, don't draw this round
+				if( inBounds && drawing && previousX >= 0 && previousY >= 0 ) {
+					sigGraphics.lineStyle( LINE_THICKNESS, 0x000000, 1.0 );
+					sigGraphics.moveTo( previousX, previousY );
+					sigGraphics.lineTo( event.localX, event.localY );
+					_emptySignature = false;
+				}
+				
+				previousX = event.localX;
+				previousY = event.localY;
+			}
+			private function onMouseUp( event:MouseEvent ):void {
+				sigGraphics.lineStyle( LINE_THICKNESS, 0x000000, 1.0 );
+				sigGraphics.drawCircle( event.localX, event.localY, LINE_THICKNESS/4 );
+				
+				drawing = false;				
+				inBounds = true;
+			}
+			
+			private function onMouseOut( event:MouseEvent ):void {
+				if( event.buttonDown ) {
+					drawing = true;
+				} else {
+					drawing = false;
+				}
+				inBounds = false;
+
+				// draw to the edge hack
+				if( drawing ) {
+					sigGraphics.lineStyle( LINE_THICKNESS, 0x000000, 1.0 );
+					sigGraphics.moveTo( previousX, previousY );
+					var localX:int = clamp( event.localX, 1, width-2 );
+					var localY:int = clamp( event.localY, 1, height-2 );
+					sigGraphics.lineTo( localX, localY );
+					_emptySignature = false;
+	
+				}
+			}
+			
+			private function onMouseOver( event:MouseEvent ):void {
+				if( event.buttonDown ) {
+					drawing = true;
+				} else {
+					drawing = false;
+				}
+				
+				inBounds = true; 
+				//drawing = event.buttonDown;
+				if( drawing ) {
+					sigGraphics.moveTo( previousX, previousY );
+					sigGraphics.lineTo( event.localX, event.localY );
+					_emptySignature = false;
+				}
+//				trace('[x]  event = ' + event.toString() );
+			}
+			
+			public function getEncodedSig( ):String {
+				//var snap:ImageSnapshot;
+				var bmdata:BitmapData = ImageSnapshot.captureBitmapData( signatureCanvas );
+				//				var encoder:PNGEncoder = new PNGEncoder( );
+				var encoder:JPEGEncoder = new JPEGEncoder( );
+				var encoded:ByteArray = encoder.encode( bmdata );
+				var b64e:Base64Encoder = new Base64Encoder( );
+				b64e.encodeBytes( encoded );
+				b64e.insertNewLines = false;
+				var result:String = b64e.toString();
+				trace( 'getEncodedSig( )\n' + result );
+				return result;
+				
+			}
+			
+/*			public function showEncodedSig( ):void {
+				var p:DebugBox = new DebugBox( );
+				mx.managers.PopUpManager.addPopUp( p, mx.core.FlexGlobals.topLevelApplication as DisplayObject, true );
+				mx.managers.PopUpManager.centerPopUp( p );
+				p.textArea.text = getEncodedSig();
+			}*/			
+			
+			public function clearSignature( ):void {
+//				Alert.show( 'Are you sure you wish to clear this signature?', 'Clear Signature', Alert.YES|Alert.NO, null, function( event:CloseEvent ):void {
+//					if( event.detail==Alert.NO ) return;
+					
+					sigGraphics.clear();
+					sigGraphics.beginFill(0xFFFFFF);
+					sigGraphics.drawRect(0,0, width, height );
+					sigGraphics.endFill();
+					
+					_emptySignature = true;
+//				}, null, Alert.NO );
+				return;
+			} // public function clearSignature( ):void 
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:Label text="X" bottom="20" left="25" fontSize="40" color="#888888" />
+	<mx:HRule width="{ this.width - 50 }" left="25" bottom="15" strokeWidth="2" strokeColor="#888888" shadowColor="#888888"/>
+	<mx:Canvas width="100%" height="100%" id="signatureCanvas" blendMode="multiply" />
+</mx:Canvas>

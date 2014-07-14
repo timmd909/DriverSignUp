@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Box xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:controls="controls.*"
+		 implements="components.IValidate"
+		 styleName="section" width="100%" height="100%" initialize="onInitialize( )">
+	<fx:Script>
+		<![CDATA[
+			import controls.AccidentBox;
+			import controls.MovingViolationBox;
+			
+			public static const MAX_ACCIDENTS:int = 5;
+			
+			private var accidentsArray:Array;
+			
+			
+			// -=-VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- //
+			
+			public function validate( ):Boolean {
+				for( var i:int = 0; i < numAccidents.value; i++ ) {
+					var currBox:AccidentBox = accidentsBox.getChildAt(i) as AccidentBox;
+					if( !currBox.validate( ) ) return false;
+				}
+				return true;
+			} // public function validate( ):Boolean {
+			
+			
+			// -=- / VALIDATION -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- // 
+
+			private function onInitialize( ):void {
+				var i:int;
+				accidentsArray = new Array( );
+				
+				for( i = 0; i < MAX_ACCIDENTS; i ++ ) {
+					var tempAccident:AccidentBox = new AccidentBox( );
+					tempAccident.accidentNum = i+1;
+					accidentsArray.push( tempAccident );
+				}
+				
+				return;
+			} // private function onInitialize( ):void 
+			
+			
+			private function onNumAccidentsChange( ):void {
+				var i:int;
+				
+				if( accidentsBox.numChildren == numAccidents.value ) {
+				
+				} else if( accidentsBox.numChildren < numAccidents.value ) { // new value is more
+					for( i = accidentsBox.numChildren; i < numAccidents.value; i ++ ) {
+						accidentsBox.addChild( accidentsArray[i] );
+					}
+				} else { // new value is less
+					for( i = accidentsBox.numChildren-1; accidentsBox.numChildren > numAccidents.value; i -- ) { 
+						accidentsBox.removeChildAt( i );
+					}
+				}				
+				
+				return;
+			} // private function onNumAccidentsChange( ):void 
+			
+			/** Fills in the specified row entry
+			 */ 
+			public function populateXML( rowXML:XML ):void {
+				if( rowXML.Accidents ) delete rowXML.accidents;
+				rowXML.appendChild( getAccidentsXML() );
+				
+			} // public function populateXML( rowXML:XML ):void {
+			
+			public function getAccidentsXML( ):XML {
+				var accidentsXML:XML = <Accidents />;
+				var currentBox:AccidentBox;
+				var numAccidents:int = accidentsBox.numChildren;
+				for( var i:int = 0; i < numAccidents; i++ ) {
+					currentBox = (accidentsBox.getChildAt( i ) as AccidentBox);	
+					accidentsXML.appendChild(  currentBox.toAccidentRowXML() );
+				} // end for
+				
+				return accidentsXML;
+			}
+			
+			private function onShowXMLClick( ):void {
+				DebugBox.show( getAccidentsXML().toXMLString(), 'Accidents XML' );
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<!-- SECTION HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	<s:Label styleName="sectionHeader" text="Step 4 — Accidents" width="100%" />
+	<!-- / SECTION HEADER -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	
+	<!-- SECTION CONTENTS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+	<mx:VBox styleName="sectionContents" width="100%" height="100%">
+		<mx:Form width="100%">
+			<mx:FormItem width="100%" label="How many accidents have you had in the past 3 years?" direction="horizontal">
+				<s:NumericStepper id="numAccidents" minimum="0" maximum="{ MAX_ACCIDENTS }" snapInterval="1" stepSize="1" valueCommit="onNumAccidentsChange()" />
+				
+		<!--		<mx:Spacer width="100%" />
+				<s:Button visible="{ Common.SHOW_XML }" label="Show XML" click="onShowXMLClick( )" />-->
+			</mx:FormItem>
+		</mx:Form>
+		
+		<mx:Box id="accidentsBox" width="100%">
+		</mx:Box>
+			
+		
+	</mx:VBox>
+	<!-- / SECTION CONTENTS -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -=- -->
+</mx:Box>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:NumericStepper xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				  xmlns:s="library://ns.adobe.com/flex/spark" 
+				  xmlns:mx="library://ns.adobe.com/flex/mx"
+				  width="60" minimum="1900" maximum="2050" creationComplete="onCreationComplete( )">
+	<fx:Script>
+		<![CDATA[
+			private function onCreationComplete( ):void {
+				this.value = new Date( ).getFullYear();
+				maximum = value + 40; // max 40 years into future
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+</s:NumericStepper>

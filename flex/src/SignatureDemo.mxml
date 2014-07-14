@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   width="920" height="200" 
+			   xmlns:controls="controls.*">
+	<fx:Script>
+		<![CDATA[
+			public static const WIDTH:int = 920;
+			public static const HEIGHT:int = 140;
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:layout>
+		<s:VerticalLayout />
+	</s:layout>
+	<controls:SignatureControl id="signature" width="100%" height="{ HEIGHT }" disableErrorString="true" />
+	<s:HGroup width="100%" height="25" horizontalAlign="center">
+		<s:Button label="Clear Signature" click="signature.clearSignature()" />
+	</s:HGroup>
+</s:Application>
